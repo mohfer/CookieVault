@@ -28,7 +28,6 @@ describe('AddCookieForm', () => {
       name: 'Example',
       domain: 'example.com',
       value: [{ name: 'sid', value: 'abc' }],
-      overwrite: false,
     })
     expect(screen.getByLabelText(/cookie name/i)).toHaveValue('')
   })
@@ -46,7 +45,6 @@ describe('AddCookieForm', () => {
       name: 'Plain',
       domain: 'example.com',
       value: 'raw-value',
-      overwrite: false,
     })
   })
 

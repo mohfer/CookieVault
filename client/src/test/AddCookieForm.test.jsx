@@ -57,7 +57,6 @@ describe('AddCookieForm', () => {
                 name: 'test_cookie',
                 domain: 'example.com',
                 value: [{ name: 'session', value: 'abc123' }],
-                overwrite: false
             })
         })
     })
@@ -114,10 +113,10 @@ describe('AddCookieForm', () => {
         })
     })
 
-    it('shows confirmation dialog on duplicate error (422)', async () => {
+    it('shows error message for duplicate cookie', async () => {
         const error = {
             response: { status: 422 },
-            message: 'Duplicate cookie'
+            message: 'A cookie with this domain and name already exists. Please use a different name.'
         }
         mockOnSubmit.mockRejectedValue(error)
 
@@ -136,85 +135,11 @@ describe('AddCookieForm', () => {
         fireEvent.click(screen.getByRole('button', { name: /add cookie/i }))
 
         await waitFor(() => {
-            expect(screen.getByText(/cookie already exists/i)).toBeInTheDocument()
-            expect(screen.getByText(/test_cookie/)).toBeInTheDocument()
-            expect(screen.getByText(/example.com/)).toBeInTheDocument()
+            expect(screen.getByText(/already exists/i)).toBeInTheDocument()
         })
     })
 
-    it('handles overwrite confirmation', async () => {
-        const error = {
-            response: { status: 422 },
-            message: 'Duplicate cookie'
-        }
-        mockOnSubmit.mockRejectedValueOnce(error).mockResolvedValueOnce()
-
-        render(<AddCookieForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
-
-        fireEvent.change(screen.getByLabelText(/cookie name/i), {
-            target: { value: 'test_cookie' }
-        })
-        fireEvent.change(screen.getByLabelText(/domain/i), {
-            target: { value: 'example.com' }
-        })
-        fireEvent.change(screen.getByLabelText(/cookie value/i), {
-            target: { value: 'test' }
-        })
-
-        fireEvent.click(screen.getByRole('button', { name: /add cookie/i }))
-
-        await waitFor(() => {
-            expect(screen.getByText(/cookie already exists/i)).toBeInTheDocument()
-        })
-
-        const overwriteButton = screen.getByRole('button', { name: /overwrite/i })
-        fireEvent.click(overwriteButton)
-
-        await waitFor(() => {
-            expect(mockOnSubmit).toHaveBeenCalledTimes(2)
-            expect(mockOnSubmit).toHaveBeenLastCalledWith(
-                expect.objectContaining({
-                    overwrite: true
-                })
-            )
-        })
-    })
-
-    it('handles cancel overwrite', async () => {
-        const error = {
-            response: { status: 422 },
-            message: 'Duplicate cookie'
-        }
-        mockOnSubmit.mockRejectedValue(error)
-
-        render(<AddCookieForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />)
-
-        fireEvent.change(screen.getByLabelText(/cookie name/i), {
-            target: { value: 'test' }
-        })
-        fireEvent.change(screen.getByLabelText(/domain/i), {
-            target: { value: 'example.com' }
-        })
-        fireEvent.change(screen.getByLabelText(/cookie value/i), {
-            target: { value: 'test' }
-        })
-
-        fireEvent.click(screen.getByRole('button', { name: /add cookie/i }))
-
-        await waitFor(() => {
-            expect(screen.getByText(/cookie already exists/i)).toBeInTheDocument()
-        })
-
-        const cancelButton = screen.getAllByRole('button', { name: /cancel/i })[0]
-        fireEvent.click(cancelButton)
-
-        await waitFor(() => {
-            expect(screen.queryByText(/cookie already exists/i)).not.toBeInTheDocument()
-            expect(screen.getByLabelText(/cookie name/i)).toBeInTheDocument()
-        })
-    })
-
-    it('shows error message for non-duplicate errors', async () => {
+    it('shows error message for server errors', async () => {
         const error = {
             response: { status: 500 },
             message: 'Server error'
